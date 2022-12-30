@@ -5036,6 +5036,8 @@ object FLogCat: TFLogCat
     BevelOuter = bvNone
     ButtonFillMode = fmTransparent
     Color = 1907997
+    Colors.FocusedSelectionColor = clNavy
+    Colors.SelectionRectangleBorderColor = clWhite
     Ctl3D = True
     Header.AutoSizeIndex = -1
     Header.Font.Charset = DEFAULT_CHARSET
@@ -5055,11 +5057,9 @@ object FLogCat: TFLogCat
     TreeOptions.PaintOptions = [toHotTrack, toShowRoot, toHideTreeLinesIfThemed]
     TreeOptions.SelectionOptions = [toExtendedFocus, toMultiSelect]
     TreeOptions.StringOptions = []
-    OnAddToSelection = VSTLogCatAddToSelection
     OnDrawText = VSTLogCatDrawText
     OnGetText = VSTLogCatGetText
     OnGetNodeDataSize = VSTLogCatGetNodeDataSize
-    OnNodeDblClick = VSTLogCatNodeDblClick
     ExplicitWidth = 721
     ExplicitHeight = 76
     Columns = <

@@ -499,27 +499,31 @@ begin
          then
             Exit;
 
-         if Pos(' W ', Text) > 0
+         if Pos(' V ', Text) > 0
          then
-            MessRec.LogLvl := 2
+            MessRec.LogLvl := 0
          else
             if Pos(' D ', Text) > 0
             then
                MessRec.LogLvl := 1
             else
-               if Pos(' I ', Text) > 0
+               if Pos(' W ', Text) > 0
                then
-                  MessRec.LogLvl := 3
+                  MessRec.LogLvl := 2
                else
-                  if Pos(' E ', Text) > 0
+                  if Pos(' I ', Text) > 0
                   then
-                     MessRec.LogLvl := 4
+                     MessRec.LogLvl := 3
                   else
-                     if Pos(' F ', Text) > 0
+                     if Pos(' E ', Text) > 0
                      then
-                        MessRec.LogLvl := 5
+                        MessRec.LogLvl := 4
                      else
-                        MessRec.LogLvl := 0;
+                        if Pos(' F ', Text) > 0
+                        then
+                           MessRec.LogLvl := 5
+                        else
+                           MessRec.LogLvl := 6;
 
          MessRec.LCMess := Text;
 

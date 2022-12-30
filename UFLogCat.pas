@@ -44,13 +44,9 @@ type
     procedure BApplyFilterClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure VSTLogCatNodeDblClick(Sender: TBaseVirtualTree;
-      const HitInfo: THitInfo);
     procedure MISavetofileClick(Sender: TObject);
     procedure MIAllToClipBrdClick(Sender: TObject);
     procedure MIMessToClipBrdClick(Sender: TObject);
-    procedure VSTLogCatAddToSelection(Sender: TBaseVirtualTree;
-      Node: PVirtualNode);
       private
       public
          Constructor Create(AOwner: TComponent); Override;
@@ -220,30 +216,30 @@ begin
 
                               if ((FormInstance.CBLogLevel.ItemIndex = 0) or
                                   ((FormInstance.CBLogLevel.ItemIndex = 1) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 0) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 1) or
+                                   ((LCMessages[CurrMessIdx].LogLvl = 1) or
                                     (LCMessages[CurrMessIdx].LogLvl = 2) or
                                     (LCMessages[CurrMessIdx].LogLvl = 3) or
                                     (LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5))) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
                                   ((FormInstance.CBLogLevel.ItemIndex = 2) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 0) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 2) or
+                                   ((LCMessages[CurrMessIdx].LogLvl = 2) or
                                     (LCMessages[CurrMessIdx].LogLvl = 3) or
                                     (LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5))) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
                                   ((FormInstance.CBLogLevel.ItemIndex = 3) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 0) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 3) or
+                                   ((LCMessages[CurrMessIdx].LogLvl = 3) or
                                     (LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5))) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
                                   ((FormInstance.CBLogLevel.ItemIndex = 4) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 0) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5))) or
+                                   ((LCMessages[CurrMessIdx].LogLvl = 4) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
                                   ((FormInstance.CBLogLevel.ItemIndex = 5) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 0) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5)))) and
+                                    ((LCMessages[CurrMessIdx].LogLvl = 5) or
+                                    (LCMessages[CurrMessIdx].LogLvl = 6)))) and
                                  ((FilterText = '') or
                                   (StrFind(StrLower(FilterText), StrLower(LCMessages[CurrMessIdx].LCMess)) > 0))
                               then
@@ -466,30 +462,30 @@ begin
    for i := 0 to LCMessages.Count - 1 do
       if ((FormInstance.CBLogLevel.ItemIndex = 0) or
           ((FormInstance.CBLogLevel.ItemIndex = 1) and
-           ((LCMessages[i].LogLvl = 0) or
-            (LCMessages[i].LogLvl = 1) or
+           ((LCMessages[i].LogLvl = 1) or
             (LCMessages[i].LogLvl = 2) or
             (LCMessages[i].LogLvl = 3) or
             (LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5))) or
+            (LCMessages[i].LogLvl = 5) or
+            (LCMessages[i].LogLvl = 6))) or
           ((FormInstance.CBLogLevel.ItemIndex = 2) and
-           ((LCMessages[i].LogLvl = 0) or
-            (LCMessages[i].LogLvl = 2) or
+           ((LCMessages[i].LogLvl = 2) or
             (LCMessages[i].LogLvl = 3) or
             (LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5))) or
+            (LCMessages[i].LogLvl = 5) or
+            (LCMessages[i].LogLvl = 6))) or
           ((FormInstance.CBLogLevel.ItemIndex = 3) and
-           ((LCMessages[i].LogLvl = 0) or
-            (LCMessages[i].LogLvl = 3) or
+           ((LCMessages[i].LogLvl = 3) or
             (LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5))) or
+            (LCMessages[i].LogLvl = 5) or
+            (LCMessages[i].LogLvl = 6))) or
           ((FormInstance.CBLogLevel.ItemIndex = 4) and
-           ((LCMessages[i].LogLvl = 0) or
-            (LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5))) or
+           ((LCMessages[i].LogLvl = 4) or
+            (LCMessages[i].LogLvl = 5) or
+            (LCMessages[i].LogLvl = 6))) or
           ((FormInstance.CBLogLevel.ItemIndex = 5) and
-           ((LCMessages[i].LogLvl = 0) or
-            (LCMessages[i].LogLvl = 5)))) and
+            ((LCMessages[i].LogLvl = 5) or
+            (LCMessages[i].LogLvl = 6)))) and
          ((FilterText = '') or
           (StrFind(StrLower(FilterText), StrLower(LCMessages[i].LCMess)) > 0))
       then
@@ -554,30 +550,30 @@ begin
          for i := 0 to LCMessages.Count - 1 do
             if ((FormInstance.CBLogLevel.ItemIndex = 0) or
                 ((FormInstance.CBLogLevel.ItemIndex = 1) and
-                 ((LCMessages[i].LogLvl = 0) or
-                  (LCMessages[i].LogLvl = 1) or
+                 ((LCMessages[i].LogLvl = 1) or
                   (LCMessages[i].LogLvl = 2) or
                   (LCMessages[i].LogLvl = 3) or
                   (LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5))) or
+                  (LCMessages[i].LogLvl = 5) or
+                  (LCMessages[i].LogLvl = 6))) or
                 ((FormInstance.CBLogLevel.ItemIndex = 2) and
-                 ((LCMessages[i].LogLvl = 0) or
-                  (LCMessages[i].LogLvl = 2) or
+                 ((LCMessages[i].LogLvl = 2) or
                   (LCMessages[i].LogLvl = 3) or
                   (LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5))) or
+                  (LCMessages[i].LogLvl = 5) or
+                  (LCMessages[i].LogLvl = 6))) or
                 ((FormInstance.CBLogLevel.ItemIndex = 3) and
-                 ((LCMessages[i].LogLvl = 0) or
-                  (LCMessages[i].LogLvl = 3) or
+                 ((LCMessages[i].LogLvl = 3) or
                   (LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5))) or
+                  (LCMessages[i].LogLvl = 5) or
+                  (LCMessages[i].LogLvl = 6))) or
                 ((FormInstance.CBLogLevel.ItemIndex = 4) and
-                 ((LCMessages[i].LogLvl = 0) or
-                  (LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5))) or
+                 ((LCMessages[i].LogLvl = 4) or
+                  (LCMessages[i].LogLvl = 5) or
+                  (LCMessages[i].LogLvl = 6))) or
                 ((FormInstance.CBLogLevel.ItemIndex = 5) and
-                 ((LCMessages[i].LogLvl = 0) or
-                  (LCMessages[i].LogLvl = 5)))) and
+                  ((LCMessages[i].LogLvl = 5) or
+                  (LCMessages[i].LogLvl = 6)))) and
                ((FilterText = '') or
                 (StrFind(StrLower(FilterText), StrLower(LCMessages[i].LCMess)) > 0))
             then
@@ -620,14 +616,6 @@ begin
 
    TBClear.Enabled := False;
    LogCatExpert.StartLogCat(True);
-
-end;
-
-procedure TFLogCat.VSTLogCatAddToSelection(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-begin
-
-//   VSTLogCat.Selected[Node] := True;
 
 end;
 
@@ -687,74 +675,6 @@ begin
 
    NodeData := Sender.GetNodeData(Node);
    CellText := LCMessages[NodeData.idx].LCMess;
-
-end;
-
-procedure TFLogCat.VSTLogCatNodeDblClick(Sender: TBaseVirtualTree;
-  const HitInfo: THitInfo);
-
-var
-   NodeData: PTreeData;
-   Serv: IOTAModuleServices;
-   Module: IOTAModule;
-   iCounter, iFileCount, i: integer;
-   SourceEdit : IOTASourceEditor;
-   TmpStr: string;
-
-begin
-
-   NodeData := Sender.GetNodeData(HitInfo.HitNode);
-
-   if StrFind('Tag(', LCMessages[NodeData.idx].LCMess) > 0
-   then
-      begin
-
-         Serv := (BorlandIDEServices as IOTAModuleServices);
-
-         for iCounter := 0 to Serv.ModuleCount - 1 do
-         begin
-
-            if (Supports(Serv.Modules[iCounter], IOTAModule, Module)) and
-               (StrBefore(ExtractFileExt(Module.FileName), ExtractFileName(Module.FileName)) = StrBefore(':', StrAfter('Tag(', LCMessages[NodeData.idx].LCMess))) and
-               (ExtractFileExt(Module.FileName) = '.pas')
-            then
-                begin
-
-                   Module.Show;
-
-                   iFileCount := Module.GetModuleFileCount;
-
-                   For i := 0 To iFileCount - 1 Do
-                     If Module.GetModuleFileEditor(i).QueryInterface(IOTASourceEditor, SourceEdit) = S_OK
-                     Then
-                        begin
-
-                           TmpStr := StrBefore(')', StrAfter('Tag(', LCMessages[NodeData.idx].LCMess));
-                           TmpStr := StrRestOf(TmpStr, StrLastPos(':', TmpStr) + 1);
-
-                           if SourceEdit.EditViewCount > 1
-                           then
-                              begin
-                                 SourceEdit.SwitchToView(1);
-                                 SourceEdit.GetEditView(1).Buffer.EditPosition.Move(StrToInt(TmpStr), 1);
-                              end
-                           else
-                              begin
-                                 SourceEdit.SwitchToView(0);
-                                 SourceEdit.GetEditView(0).Buffer.EditPosition.Move(StrToInt(TmpStr), 1);
-                              end;
-
-                           Break;
-
-                        end;
-
-                   Break;
-
-                end;
-
-         end;
-
-      end;
 
 end;
 
