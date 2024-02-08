@@ -8,7 +8,8 @@ uses
    Vcl.Controls, Vcl.Forms, Vcl.Dialogs, DockForm, Vcl.StdCtrls, Vcl.ComCtrls,
    Vcl.ExtCtrls, Vcl.Imaging.pngimage, Vcl.ToolWin, System.ImageList, Vcl.ImgList,
    VirtualTrees, Vcl.Imaging.jpeg, System.Generics.Collections, Vcl.Buttons, ToolsAPI,
-   Vcl.Menus, vcl.Clipbrd;
+   Vcl.Menus, vcl.Clipbrd, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  VirtualTrees.AncestorVCL;
 
 type
    TFLogCat = class(TDockableForm)
@@ -77,6 +78,7 @@ var
    FormInstance: TFLogCat;
    BreakMsgs: Boolean = False;
    CurrMessIdx: Integer;
+   NoDevFound: Boolean;
 
 procedure StartMessageLoop;
 procedure RestartMessageLoop;
@@ -379,6 +381,8 @@ end;
 procedure TFLogCat.CBThisPackClick(Sender: TObject);
 begin
 
+   NoDevFound := False;
+
    if CBThisPack.Checked
    then
       SavePid := '';
@@ -613,6 +617,8 @@ end;
 
 procedure TFLogCat.TBClearClick(Sender: TObject);
 begin
+
+   NoDevFound := False;
 
    TBClear.Enabled := False;
    LogCatExpert.StartLogCat(True);

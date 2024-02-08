@@ -26,7 +26,6 @@ object FLogCat: TFLogCat
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 721
     object Label1: TLabel
       Left = 1
       Top = 5
@@ -5040,11 +5039,6 @@ object FLogCat: TFLogCat
     Colors.SelectionRectangleBorderColor = clWhite
     Ctl3D = True
     Header.AutoSizeIndex = -1
-    Header.Font.Charset = DEFAULT_CHARSET
-    Header.Font.Color = clWindowText
-    Header.Font.Height = -12
-    Header.Font.Name = 'Segoe UI'
-    Header.Font.Style = []
     Header.Options = [hoColumnResize, hoDrag, hoOwnerDraw]
     Header.Style = hsFlatButtons
     Indent = 0
@@ -5060,16 +5054,16 @@ object FLogCat: TFLogCat
     OnDrawText = VSTLogCatDrawText
     OnGetText = VSTLogCatGetText
     OnGetNodeDataSize = VSTLogCatGetNodeDataSize
-    ExplicitWidth = 721
-    ExplicitHeight = 76
+    Touch.InteractiveGestures = [igPan, igPressAndTap]
+    Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <
       item
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus]
         Position = 0
+        Text = 'test'
         Width = 700
-        WideText = 'test'
       end>
-    WideDefaultText = 'test'
+    DefaultText = 'test'
   end
   object ImageList1: TImageList
     ColorDepth = cd32Bit
