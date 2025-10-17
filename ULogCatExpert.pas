@@ -729,11 +729,11 @@ begin
 
    if Clear
    then
-      FileLines.Add(adbPath + ' shell logcat -c');
+      FileLines.Add('adb shell logcat -c');
 
    if not FormInstance.CBThisPack.Checked
    then
-      FileLines.Add(adbPath + ' shell logcat V')
+      FileLines.Add('adb shell logcat V')
    else
       if SavePid = ''
       then
@@ -752,7 +752,7 @@ begin
 
          end
       else
-         FileLines.Add(adbPath + ' shell logcat --pid ' + SavePid);
+         FileLines.Add('adb shell logcat --pid ' + SavePid);
 
    FileLines.SaveToFile(TmpDir + '\StartLogCat.bat');
    FileLines.Free;
@@ -818,7 +818,7 @@ begin
    FileLines := TStringList.Create;
    FileLines.Clear;
 
-   FileLines.Add(adbPath + ' shell pidof ' + PackName);
+   FileLines.Add('adb shell pidof ' + PackName);
    FileLines.SaveToFile(TmpDir + '\GetPid.bat');
    FileLines.Free;
 
