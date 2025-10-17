@@ -58,7 +58,8 @@ var
    PidOutput: string;
    PackName: string;
 
-{$IFDEF VER360}
+{$IFDEF VER370}
+{$ELSEIF VER360}
 {$ELSEIF VER350}
 {$ELSE}
 function AddIconToImageList(AIcon: TIcon; ImageList: TCustomImageList;
@@ -923,7 +924,9 @@ begin
 
          Bmp.LoadFromResourceName(HInstance, 'Logcaticon');
 
-         {$IFDEF VER360}
+         {$IFDEF VER370}
+             ImageIndex := AddGraphicToVirtualImageList(bmp, NTAServices.ImageList as TVirtualImageList, '', False);
+         {$ELSEIF VER360}
              ImageIndex := AddGraphicToVirtualImageList(bmp, NTAServices.ImageList as TVirtualImageList, '', False);
          {$ELSEIF VER350}
              ImageIndex := AddGraphicToVirtualImageList(bmp, NTAServices.ImageList as TVirtualImageList, '', False);

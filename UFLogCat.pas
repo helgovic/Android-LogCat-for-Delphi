@@ -8,46 +8,52 @@ uses
    Vcl.Controls, Vcl.Forms, Vcl.Dialogs, DockForm, Vcl.StdCtrls, Vcl.ComCtrls,
    Vcl.ExtCtrls, Vcl.Imaging.pngimage, Vcl.ToolWin, System.ImageList, Vcl.ImgList,
    VirtualTrees, Vcl.Imaging.jpeg, System.Generics.Collections, Vcl.Buttons, ToolsAPI,
-   Vcl.Menus, vcl.Clipbrd, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  VirtualTrees.AncestorVCL;
+   Vcl.Menus, Vcl.Clipbrd, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+   VirtualTrees.AncestorVCL, Vcl.Mask;
 
 type
    TFLogCat = class(TDockableForm)
-    Panel1: TPanel;
-    CBFilter: TComboBox;
-    CBLogLevel: TComboBox;
-    Label1: TLabel;
-    Label2: TLabel;
-    ToolBar1: TToolBar;
-    TBStopScroll: TToolButton;
-    TBClear: TToolButton;
-    ImageList1: TImageList;
-    VSTLogCat: TVirtualStringTree;
-    CBThisPack: TCheckBox;
-    BApplyFilter: TSpeedButton;
-    PUMLogCat: TPopupMenu;
-    MISavetofile: TMenuItem;
-    SDLogCat: TSaveDialog;
-    MIAllToClipBrd: TMenuItem;
-    MIMessToClipBrd: TMenuItem;
-    procedure TBClearClick(Sender: TObject);
-    procedure CBLogLevelSelect(Sender: TObject);
-    procedure VSTLogCatDrawText(Sender: TBaseVirtualTree; TargetCanvas: TCanvas;
-      Node: PVirtualNode; Column: TColumnIndex; const Text: string;
-      const CellRect: TRect; var DefaultDraw: Boolean);
-    procedure VSTLogCatGetNodeDataSize(Sender: TBaseVirtualTree;
-      var NodeDataSize: Integer);
-    procedure VSTLogCatGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
-    procedure CBFilterDropDown(Sender: TObject);
-    procedure CBFilterSelect(Sender: TObject);
-    procedure CBThisPackClick(Sender: TObject);
-    procedure BApplyFilterClick(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure MISavetofileClick(Sender: TObject);
-    procedure MIAllToClipBrdClick(Sender: TObject);
-    procedure MIMessToClipBrdClick(Sender: TObject);
+      Panel1: TPanel;
+      CBFilter: TComboBox;
+      CBLogLevel: TComboBox;
+      Label1: TLabel;
+      Label2: TLabel;
+      ToolBar1: TToolBar;
+      TBStopScroll: TToolButton;
+      TBClear: TToolButton;
+      ImageList1: TImageList;
+      VSTLogCat: TVirtualStringTree;
+      CBThisPack: TCheckBox;
+      BApplyFilter: TSpeedButton;
+      PUMLogCat: TPopupMenu;
+      MISavetofile: TMenuItem;
+      SDLogCat: TSaveDialog;
+      MIAllToClipBrd: TMenuItem;
+      MIMessToClipBrd: TMenuItem;
+    Label3: TLabel;
+    CBDevices: TComboBox;
+    LESearchText: TLabeledEdit;
+    BFindNext: TSpeedButton;
+    BFindPrevious: TSpeedButton;
+      procedure TBClearClick(Sender: TObject);
+      procedure CBLogLevelSelect(Sender: TObject);
+      procedure VSTLogCatDrawText(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; const Text: string; const CellRect: TRect; var DefaultDraw: Boolean);
+      procedure VSTLogCatGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+      procedure VSTLogCatGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+      procedure CBFilterDropDown(Sender: TObject);
+      procedure CBFilterSelect(Sender: TObject);
+      procedure CBThisPackClick(Sender: TObject);
+      procedure BApplyFilterClick(Sender: TObject);
+      procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+      procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+      procedure MISavetofileClick(Sender: TObject);
+      procedure MIAllToClipBrdClick(Sender: TObject);
+      procedure MIMessToClipBrdClick(Sender: TObject);
+      procedure VSTLogCatAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
+      procedure FormShow(Sender: TObject);
+    procedure TBStopScrollClick(Sender: TObject);
+    procedure BFindNextClick(Sender: TObject);
+    procedure BFindPreviousClick(Sender: TObject);
       private
       public
          Constructor Create(AOwner: TComponent); Override;
@@ -67,11 +73,11 @@ type
    end;
 
 type
-  rTreeData = record
-  idx: Integer;
-end;
+   rTreeData = record
+      idx: Integer;
+   end;
 
-PTreeData = ^rTreeData;
+   PTreeData = ^rTreeData;
 
 var
    LCMessages: TList<TMessRec>;
@@ -88,10 +94,29 @@ implementation
 {$R *.dfm}
 
 Uses
-   DeskUtil, JclSysUtils, ULogCatExpert, BrandingAPI, System.IniFiles, JclStrings;
+   DeskUtil, JclSysUtils, ULogCatExpert, System.IniFiles, JclStrings, PlatformAPI;
 
 var
-  FilterText: string = '';
+   FilterText: string = '';
+   ScrollStop: Boolean = False;
+
+function GetNodeByIndex(Tree: TVirtualStringTree; Index: Integer): PVirtualNode;
+var
+   node: PVirtualNode;
+begin
+   Result := nil;
+
+   node := Tree.GetFirstChildNoInit(nil);
+   while Assigned(node) do
+   begin
+      if node.Index = Index then
+      begin
+         Result := node;
+         Exit;
+      end;
+      node := Tree.GetNextNoInit(node);
+   end;
+end;
 
 procedure RestartMessageLoop;
 begin
@@ -104,8 +129,7 @@ begin
 
 end;
 
-Procedure RegisterDockableForm(FormClass: TFLogCatClass;
-   var FormVar; Const FormName: String);
+Procedure RegisterDockableForm(FormClass: TFLogCatClass; var FormVar; Const FormName: String);
 Begin
 
    If @RegisterFieldAddress <> Nil
@@ -186,88 +210,92 @@ begin
    FormInstance.VSTLogCat.Header.Columns[0].Width := FormInstance.VSTLogCat.Width - 30;
    BreakMsgs := False;
 
-   TThread.CreateAnonymousThread(procedure()
-   begin
+   TThread.CreateAnonymousThread(
+      procedure()
+      begin
 
-      while not BreakMsgs do
-         if CurrMessIdx <= LCMessages.Count - 1
-         then
-            begin
+         while not BreakMsgs do
+            if CurrMessIdx <= LCMessages.Count - 1
+            then
+               begin
 
-               if LCMessages[CurrMessIdx].LCMess <> ''
-               then
-                  begin
-
-                     TThread.Synchronize(TThread.CurrentThread,
-                     procedure ()
-
-                     var
-                       Node: PVirtualNode;
-                       NodeData: PTreeData;
-
+                  if LCMessages[CurrMessIdx].LCMess <> ''
+                  then
                      begin
 
-                        if LCMessages.Count > 10000
-                        then
+                        TThread.Synchronize(TThread.CurrentThread,
+                           procedure()
+
+                           var
+                              Node: PVirtualNode;
+                              NodeData: PTreeData;
+//                              CurrNode: PVirtualNode;
+//                              i: integer;
+
                            begin
-                              LCMessages.Delete(0);
-                              Dec(CurrMessIdx);
-                           end
-                        else
-                           begin
 
-                              if ((FormInstance.CBLogLevel.ItemIndex = 0) or
-                                  ((FormInstance.CBLogLevel.ItemIndex = 1) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 1) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 2) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 3) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
-                                  ((FormInstance.CBLogLevel.ItemIndex = 2) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 2) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 3) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
-                                  ((FormInstance.CBLogLevel.ItemIndex = 3) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 3) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
-                                  ((FormInstance.CBLogLevel.ItemIndex = 4) and
-                                   ((LCMessages[CurrMessIdx].LogLvl = 4) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 5) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 6))) or
-                                  ((FormInstance.CBLogLevel.ItemIndex = 5) and
-                                    ((LCMessages[CurrMessIdx].LogLvl = 5) or
-                                    (LCMessages[CurrMessIdx].LogLvl = 6)))) and
-                                 ((FilterText = '') or
-                                  (StrFind(StrLower(FilterText), StrLower(LCMessages[CurrMessIdx].LCMess)) > 0))
-                              then
-                                 begin
-                                    Node := FormInstance.VSTLogCat.AddChild(nil);
-                                    NodeData := FormInstance.VSTLogCat.GetNodeData(Node);
-                                    NodeData.idx := CurrMessIdx;
-                                 end;
+//                              if LCMessages.Count > 5000
+//                              then
+//                                 begin
+//
+//                                    LCMessages.DeleteRange(0, 1000);
+//                                    Dec(CurrMessIdx, 1000);
+//
+//                                    CurrNode := FormInstance.VSTLogCat.GetFirst(True);
+//
+//                                    i := -1;
+//
+//                                    while CurrNode <> nil do
+//                                       begin
+//
+//                                          Inc(i);
+//
+//                                          NodeData := FormInstance.VSTLogCat.GetNodeData(CurrNode);
+//                                          NodeData.idx := i;
+//
+//                                          CurrNode := CurrNode.NextSibling;
+//
+//                                       end;
+//
+//                                 end
+//                              else
+//                                 begin
 
-                           end;
+                                    if ((FormInstance.CBLogLevel.ItemIndex = 0) or ((FormInstance.CBLogLevel.ItemIndex = 1) and ((LCMessages[CurrMessIdx].LogLvl = 1) or
+                                       (LCMessages[CurrMessIdx].LogLvl = 2) or (LCMessages[CurrMessIdx].LogLvl = 3) or (LCMessages[CurrMessIdx].LogLvl = 4) or (LCMessages[CurrMessIdx].LogLvl = 5) or
+                                       (LCMessages[CurrMessIdx].LogLvl = 6))) or ((FormInstance.CBLogLevel.ItemIndex = 2) and ((LCMessages[CurrMessIdx].LogLvl = 2) or
+                                       (LCMessages[CurrMessIdx].LogLvl = 3) or (LCMessages[CurrMessIdx].LogLvl = 4) or (LCMessages[CurrMessIdx].LogLvl = 5) or (LCMessages[CurrMessIdx].LogLvl = 6))) or
+                                       ((FormInstance.CBLogLevel.ItemIndex = 3) and ((LCMessages[CurrMessIdx].LogLvl = 3) or (LCMessages[CurrMessIdx].LogLvl = 4) or
+                                       (LCMessages[CurrMessIdx].LogLvl = 5) or (LCMessages[CurrMessIdx].LogLvl = 6))) or ((FormInstance.CBLogLevel.ItemIndex = 4) and
+                                       ((LCMessages[CurrMessIdx].LogLvl = 4) or (LCMessages[CurrMessIdx].LogLvl = 5) or (LCMessages[CurrMessIdx].LogLvl = 6))) or
+                                       ((FormInstance.CBLogLevel.ItemIndex = 5) and ((LCMessages[CurrMessIdx].LogLvl = 5) or (LCMessages[CurrMessIdx].LogLvl = 6)))) and
+                                       ((FilterText = '') or (StrFind(StrLower(FilterText), StrLower(LCMessages[CurrMessIdx].LCMess)) > 0))
+                                    then
+                                       begin
+                                          Node := FormInstance.VSTLogCat.AddChild(nil);
+                                          NodeData := FormInstance.VSTLogCat.GetNodeData(Node);
+                                          NodeData.idx := CurrMessIdx;
+                                          Inc(CurrMessIdx);
+                                       end;
 
-                        FormInstance.VSTLogCat.Refresh;
+//                                 end;
 
-                        if not FormInstance.TBStopScroll.Down
-                        then
-                           FormInstance.VSTLogCat.ScrollIntoView(FormInstance.VSTLogCat.GetLast, False);
+//                              FormInstance.VSTLogCat.Refresh;
 
-                        Inc(CurrMessIdx);
+//                              if not ScrollStop
+//                              then
+//                                 begin
+//                                    FormInstance.VSTLogCat.Refresh;
+//                                    FormInstance.VSTLogCat.ScrollIntoView(FormInstance.VSTLogCat.GetLast, False);
+//                                 end;
 
-                     end);
+                           end);
 
-                  end;
+                     end;
 
-            end;
+               end;
 
-   end).Start;
+      end).Start;
 
 end;
 
@@ -275,7 +303,7 @@ procedure TFLogCat.BApplyFilterClick(Sender: TObject);
 
 var
    Items: TStringList;
-   i: integer;
+   i: Integer;
    Found: Boolean;
 
 begin
@@ -289,52 +317,120 @@ begin
          Items := TStringList.Create;
 
          with TIniFile.Create(ChangeFileExt(GetCurrentProjectFileName, '.ini')) do
-         try
+            try
 
-            StrToStrings(ReadString('LogCatOptions', 'LogCatFilters', GetPackageName), '¤', Items, False);
+               StrToStrings(ReadString('LogCatOptions', 'LogCatFilters', GetPackageName), '¤', Items, False);
 
-            Found := False;
+               Found := False;
 
-            for i := 0 to Items.count - 1 do
-               if Items[i] = CBFilter.Text
+               for i := 0 to Items.Count - 1 do
+                  if Items[i] = CBFilter.Text
+                  then
+                     begin
+                        Found := True;
+                        Break;
+                     end;
+
+               if not Found
                then
                   begin
-                     Found := True;
-                     Break;
+
+                     if Items.Count >= 10
+                     then
+                        Items.Delete(9);
+
+                     if GetPackageName = ''
+                     then
+                        Items.Insert(0, CBFilter.Text)
+                     else
+                        Items.Insert(1, CBFilter.Text);
+
+                     WriteString('LogCatOptions', 'LogCatFilters', StringsToStr(Items, '¤'));
+                     UpdateFile;
+
+                     CBFilter.Items.Text := StringsToStr(Items, sLineBreak);
+
                   end;
 
-            if not Found
-            then
-               begin
+               CBFilter.ItemIndex := CBFilter.Items.IndexOf(FilterText);
 
-                  if Items.count >= 10
-                  then
-                     Items.Delete(9);
+            finally
+               Free;
+            end;
 
-                  if GetPackageName = ''
-                  then
-                     Items.Insert(0, CBFilter.Text)
-                  else
-                     Items.Insert(1, CBFilter.Text);
-
-                  WriteString('LogCatOptions', 'LogCatFilters', StringsToStr(Items, '¤'));
-                  UpdateFile;
-
-                  CBFilter.Items.Text := StringsToStr(Items, sLineBreak);
-
-               end;
-
-            CBFilter.ItemIndex := CBFilter.Items.IndexOf(FilterText);
-
-         finally
-            Free;
-         end;
-
-         Items.DisposeOf;
+         Items.Free;
 
       end;
 
    RestartMessageLoop;
+
+end;
+
+procedure TFLogCat.BFindNextClick(Sender: TObject);
+
+var
+   NodeData: PTreeData;
+   SearchNode: PVirtualNode;
+
+begin
+
+   if LESearchText.Text <> ''
+   then
+      begin
+
+         SearchNode := FormInstance.VSTLogCat.BottomNode.NextSibling;
+
+         while SearchNode <> nil do
+            begin
+
+               NodeData := FormInstance.VSTLogCat.GetNodeData(SearchNode);
+
+               if Pos(AnsiLowerCase(LESearchText.Text), AnsiLowerCase(LCMessages[NodeData.idx].LCMess)) > 0
+               then
+                  begin
+                     FormInstance.VSTLogCat.ScrollIntoView(SearchNode, False);
+                     Break;
+                  end;
+
+               SearchNode := SearchNode.NextSibling;
+
+            end;
+
+      end;
+
+end;
+
+procedure TFLogCat.BFindPreviousClick(Sender: TObject);
+
+var
+   NodeData: PTreeData;
+   SearchNode: PVirtualNode;
+
+begin
+
+   if LESearchText.Text <> ''
+   then
+      begin
+
+         SearchNode := FormInstance.VSTLogCat.TopNode.PrevSibling;
+
+         while SearchNode <> nil do
+            begin
+
+               NodeData := FormInstance.VSTLogCat.GetNodeData(SearchNode);
+
+               if Pos(AnsiLowerCase(LESearchText.Text), AnsiLowerCase(LCMessages[NodeData.idx].LCMess)) > 0
+               then
+                  begin
+                     FormInstance.VSTLogCat.ScrollIntoView(SearchNode, False);
+                     Break;
+                  end;
+
+               SearchNode := SearchNode.PrevSibling;
+
+            end;
+
+      end;
 
 end;
 
@@ -348,19 +444,18 @@ begin
    Items := TStringList.Create;
 
    with TIniFile.Create(ChangeFileExt(GetCurrentProjectFileName, '.ini')) do
-   try
+      try
 
-      StrToStrings(ReadString('LogCatOptions', 'LogCatFilters', GetPackageName), '¤', Items);
+         StrToStrings(ReadString('LogCatOptions', 'LogCatFilters', GetPackageName), '¤', Items);
 
-
-   finally
-      Free;
-   end;
+      finally
+         Free;
+      end;
 
    CBFilter.Items.Clear;
    CBFilter.Items.Text := StringsToStr(Items, sLineBreak);
 
-   Items.DisposeOf;
+   Items.Free;
 
 end;
 
@@ -388,7 +483,7 @@ begin
       SavePid := '';
 
    TBClear.Enabled := False;
-   LogCatExpert.StartLogCat(False);
+   LogCatExpert.StartLogCat(True);
 
    LogCatExpert.CheckForPid.Enabled := CBThisPack.Checked;
 
@@ -400,7 +495,6 @@ begin
    inherited;
 
    VSTLogCat.NodeDataSize := SizeOf(rTreeData);
-   VSTLogCat.Color := Themeproperties.Background2;
 
    LCMessages := TList<TMessRec>.Create;
 
@@ -426,8 +520,7 @@ begin
 
 end;
 
-procedure TFLogCat.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TFLogCat.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
 
    if ActiveControl = CBFilter
@@ -441,8 +534,7 @@ begin
 
 end;
 
-procedure TFLogCat.FormKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TFLogCat.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
 
    if ActiveControl = CBFilter
@@ -451,6 +543,11 @@ begin
       then
          Key := 0;
 
+end;
+
+procedure TFLogCat.FormShow(Sender: TObject);
+begin
+   VSTLogCat.Color := clGray;
 end;
 
 procedure TFLogCat.MIAllToClipBrdClick(Sender: TObject);
@@ -464,40 +561,19 @@ begin
    FileLines := TStringList.Create;
 
    for i := 0 to LCMessages.Count - 1 do
-      if ((FormInstance.CBLogLevel.ItemIndex = 0) or
-          ((FormInstance.CBLogLevel.ItemIndex = 1) and
-           ((LCMessages[i].LogLvl = 1) or
-            (LCMessages[i].LogLvl = 2) or
-            (LCMessages[i].LogLvl = 3) or
-            (LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5) or
-            (LCMessages[i].LogLvl = 6))) or
-          ((FormInstance.CBLogLevel.ItemIndex = 2) and
-           ((LCMessages[i].LogLvl = 2) or
-            (LCMessages[i].LogLvl = 3) or
-            (LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5) or
-            (LCMessages[i].LogLvl = 6))) or
-          ((FormInstance.CBLogLevel.ItemIndex = 3) and
-           ((LCMessages[i].LogLvl = 3) or
-            (LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5) or
-            (LCMessages[i].LogLvl = 6))) or
-          ((FormInstance.CBLogLevel.ItemIndex = 4) and
-           ((LCMessages[i].LogLvl = 4) or
-            (LCMessages[i].LogLvl = 5) or
-            (LCMessages[i].LogLvl = 6))) or
-          ((FormInstance.CBLogLevel.ItemIndex = 5) and
-            ((LCMessages[i].LogLvl = 5) or
-            (LCMessages[i].LogLvl = 6)))) and
-         ((FilterText = '') or
-          (StrFind(StrLower(FilterText), StrLower(LCMessages[i].LCMess)) > 0))
+      if ((FormInstance.CBLogLevel.ItemIndex = 0) or ((FormInstance.CBLogLevel.ItemIndex = 1) and ((LCMessages[i].LogLvl = 1) or (LCMessages[i].LogLvl = 2) or (LCMessages[i].LogLvl = 3) or
+         (LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or (LCMessages[i].LogLvl = 6))) or
+         ((FormInstance.CBLogLevel.ItemIndex = 2) and ((LCMessages[i].LogLvl = 2) or (LCMessages[i].LogLvl = 3) or (LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or
+         (LCMessages[i].LogLvl = 6))) or ((FormInstance.CBLogLevel.ItemIndex = 3) and ((LCMessages[i].LogLvl = 3) or (LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or
+         (LCMessages[i].LogLvl = 6))) or ((FormInstance.CBLogLevel.ItemIndex = 4) and ((LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or (LCMessages[i].LogLvl = 6))) or
+         ((FormInstance.CBLogLevel.ItemIndex = 5) and ((LCMessages[i].LogLvl = 5) or (LCMessages[i].LogLvl = 6)))) and
+         ((FilterText = '') or (StrFind(StrLower(FilterText), StrLower(LCMessages[i].LCMess)) > 0))
       then
          FileLines.Add(LCMessages[i].LCMess);
 
    Clipboard.AsText := FileLines.Text;
 
-   FileLines.DisposeOf;
+   FileLines.Free;
 
    ShowMessage('Messages has been copied to the clipboard');
 
@@ -514,7 +590,7 @@ begin
 
    FileLines := TStringList.Create;
 
-   Node :=  VSTLogCat.GetFirstSelected;
+   Node := VSTLogCat.GetFirstSelected;
 
    while Node <> nil do
       begin
@@ -529,7 +605,7 @@ begin
 
    Clipboard.AsText := FileLines.Text;
 
-   FileLines.DisposeOf;
+   FileLines.Free;
 
    ShowMessage('Selected messages has been copied to the clipboard');
 
@@ -552,39 +628,18 @@ begin
          FileLines := TStringList.Create;
 
          for i := 0 to LCMessages.Count - 1 do
-            if ((FormInstance.CBLogLevel.ItemIndex = 0) or
-                ((FormInstance.CBLogLevel.ItemIndex = 1) and
-                 ((LCMessages[i].LogLvl = 1) or
-                  (LCMessages[i].LogLvl = 2) or
-                  (LCMessages[i].LogLvl = 3) or
-                  (LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5) or
-                  (LCMessages[i].LogLvl = 6))) or
-                ((FormInstance.CBLogLevel.ItemIndex = 2) and
-                 ((LCMessages[i].LogLvl = 2) or
-                  (LCMessages[i].LogLvl = 3) or
-                  (LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5) or
-                  (LCMessages[i].LogLvl = 6))) or
-                ((FormInstance.CBLogLevel.ItemIndex = 3) and
-                 ((LCMessages[i].LogLvl = 3) or
-                  (LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5) or
-                  (LCMessages[i].LogLvl = 6))) or
-                ((FormInstance.CBLogLevel.ItemIndex = 4) and
-                 ((LCMessages[i].LogLvl = 4) or
-                  (LCMessages[i].LogLvl = 5) or
-                  (LCMessages[i].LogLvl = 6))) or
-                ((FormInstance.CBLogLevel.ItemIndex = 5) and
-                  ((LCMessages[i].LogLvl = 5) or
-                  (LCMessages[i].LogLvl = 6)))) and
-               ((FilterText = '') or
-                (StrFind(StrLower(FilterText), StrLower(LCMessages[i].LCMess)) > 0))
+            if ((FormInstance.CBLogLevel.ItemIndex = 0) or ((FormInstance.CBLogLevel.ItemIndex = 1) and ((LCMessages[i].LogLvl = 1) or (LCMessages[i].LogLvl = 2) or (LCMessages[i].LogLvl = 3) or
+               (LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or (LCMessages[i].LogLvl = 6))) or
+               ((FormInstance.CBLogLevel.ItemIndex = 2) and ((LCMessages[i].LogLvl = 2) or (LCMessages[i].LogLvl = 3) or (LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or
+               (LCMessages[i].LogLvl = 6))) or ((FormInstance.CBLogLevel.ItemIndex = 3) and ((LCMessages[i].LogLvl = 3) or (LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or
+               (LCMessages[i].LogLvl = 6))) or ((FormInstance.CBLogLevel.ItemIndex = 4) and ((LCMessages[i].LogLvl = 4) or (LCMessages[i].LogLvl = 5) or (LCMessages[i].LogLvl = 6))) or
+               ((FormInstance.CBLogLevel.ItemIndex = 5) and ((LCMessages[i].LogLvl = 5) or (LCMessages[i].LogLvl = 6)))) and
+               ((FilterText = '') or (StrFind(StrLower(FilterText), StrLower(LCMessages[i].LCMess)) > 0))
             then
                FileLines.Add(LCMessages[i].LCMess);
 
          FileLines.SaveToFile(SDLogCat.FileName);
-         FileLines.DisposeOf;
+         FileLines.Free;
 
       end;
 
@@ -625,12 +680,30 @@ begin
 
 end;
 
-procedure TFLogCat.VSTLogCatDrawText(Sender: TBaseVirtualTree;
-  TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
-  const Text: string; const CellRect: TRect; var DefaultDraw: Boolean);
+procedure TFLogCat.TBStopScrollClick(Sender: TObject);
+begin
+
+   ScrollStop := not ScrollStop;
+
+   TBStopScroll.Down := ScrollStop;
+
+end;
+
+procedure TFLogCat.VSTLogCatAddToSelection(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+
+   // VSTLogCat.Selected[Node] := True;
+
+end;
+
+procedure TFLogCat.VSTLogCatDrawText(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; const Text: string; const CellRect: TRect; var DefaultDraw: Boolean);
 
 var
-  NodeData: PTreeData;
+   NodeData: PTreeData;
+   SaveColor: TColor;
+   TmpStr, TmpStr2: String;
+   Size: TSize;
+   X, Y: integer;
 
 begin
 
@@ -644,46 +717,109 @@ begin
 
    case LCMessages[NodeData.idx].LogLvl of
 
-      0:  TargetCanvas.Font.Color := clWhite;
+      0:
+         TargetCanvas.Font.Color := clGray;
 
-      1:  TargetCanvas.Font.Color := clGreen;
+      1:
+         TargetCanvas.Font.Color := clGreen;
 
-      2:  TargetCanvas.Font.Color := clYellow;
+      2:
+         TargetCanvas.Font.Color := clYellow;
 
-      3:  TargetCanvas.Font.Color := clAqua;
+      3:
+         TargetCanvas.Font.Color := clAqua;
 
-      4:  TargetCanvas.Font.Color := clRed;
+      4:
+         TargetCanvas.Font.Color := clRed;
 
-      5:  TargetCanvas.Font.Color := clRed;
+      5:
+         TargetCanvas.Font.Color := clRed;
 
-   else
-      TargetCanvas.Font.Color := clWhite;
+      6:
+         TargetCanvas.Font.Color := clGray;
+
    end;
 
-   TargetCanvas.TextOut(CellRect.Left, CellRect.Top, LCMessages[NodeData.idx].LCMess);
+   SaveColor := TargetCanvas.Brush.Color;
+
+   if Pos(AnsiLowerCase(LESearchText.Text), AnsiLowerCase(LCMessages[NodeData.idx].LCMess)) > 0
+   then
+      begin
+
+         Y := CellRect.Top;
+         X := CellRect.Left;
+
+         Canvas.MoveTo(CellRect.Left, CellRect.Top);
+
+         TmpStr := Trim(LCMessages[NodeData.idx].LCMess);
+
+         while True do
+            begin
+
+               if Pos(AnsiLowerCase(LESearchText.Text), AnsiLowerCase(TmpStr)) > 0
+               then
+                  begin
+
+                     TmpStr2 := StrBefore(LESearchText.Text, TmpStr);
+
+                     if TmpStr2 <> ''
+                     then
+                        begin
+
+                           TargetCanvas.TextOut(X, Y, TmpStr2);
+                           GetTextExtentPoint32(TargetCanvas.Handle, PChar(TmpStr2), Length(TmpStr2), Size);
+                           Inc(X, Size.cx);
+
+                           TargetCanvas.Brush.Color := clYellow;
+                           TargetCanvas.TextOut(X, Y, Copy(TmpStr, Pos(AnsiLowerCase(LESearchText.Text), AnsiLowerCase(TmpStr)), Length(LESearchText.Text)));
+                           GetTextExtentPoint32(TargetCanvas.Handle, PChar(Copy(TmpStr, Pos(AnsiLowerCase(LESearchText.Text), AnsiLowerCase(TmpStr)), Length(LESearchText.Text))), Length(LESearchText.Text), Size);
+                           Inc(X, Size.cx);
+
+                           TargetCanvas.Brush.Color := SaveColor;
+
+                           TmpStr := StrAfter(LESearchText.Text, TmpStr);
+
+                           if TmpStr = ''
+                           then
+                              begin
+                                 Break;
+                              end;
+
+                        end;
+
+                  end
+               else
+                  begin
+                     TargetCanvas.TextOut(X, Y, TmpStr);
+                     Break;
+                  end;
+
+            end;
+
+      end
+   else
+      TargetCanvas.TextOut(CellRect.Left, CellRect.Top, LCMessages[NodeData.idx].LCMess);
 
 end;
 
-procedure TFLogCat.VSTLogCatGetNodeDataSize(Sender: TBaseVirtualTree;
-  var NodeDataSize: Integer);
+procedure TFLogCat.VSTLogCatGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
 begin
    NodeDataSize := SizeOf(rTreeData);
 end;
 
-procedure TFLogCat.VSTLogCatGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: string);
+procedure TFLogCat.VSTLogCatGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 
 var
-  NodeData: PTreeData;
+   NodeData: PTreeData;
 
 begin
 
-   NodeData := Sender.GetNodeData(Node);
-   CellText := LCMessages[NodeData.idx].LCMess;
+   try
+      NodeData := Sender.GetNodeData(Node);
+      CellText := LCMessages[NodeData.idx].LCMess;
+   except
+   end;
 
 end;
 
 end.
-
-
