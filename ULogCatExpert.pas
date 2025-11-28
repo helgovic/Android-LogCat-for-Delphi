@@ -328,8 +328,9 @@ begin
       if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) = UpperCase(ExeFileName)) or
           (UpperCase(FProcessEntry32.szExeFile) = UpperCase(ExeFileName)))
       then
-         if (StrFind('adb.exe"  shell logcat V', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0) or
-            (StrFind('adb.exe"  shell logcat --pid ', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0)
+         if ((StrFind('adb', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0) and (StrFind(' shell logcat V', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0)) or
+            ((StrFind('adb', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0) and (StrFind(' shell logcat -c', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0)) or
+            ((StrFind('adb', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0) and (StrFind(' shell logcat --pid', GetProcessCmdLine(FProcessEntry32.th32ProcessID)) > 0))
          then
             begin
 
